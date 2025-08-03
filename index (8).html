@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>All-In-One Downloader</title>
+  <style>
+    /* Reset & base */
+    * {
+      box-sizing: border-box;
+      margin: 0; padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    body {
+      background: #121212;
+      color: #f1c40f;
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    a {
+      color: #f1c40f;
+      text-decoration: none;
+      font-weight: 600;
+      transition: color 0.3s ease;
+    }
+    a:hover {
+      color: #ffd93b;
+    }
+    header {
+      background: #1e1e1e;
+      padding: 1rem 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.9);
+    }
+    header h1 {
+      font-size: 1.8rem;
+      margin-bottom: 0.3rem;
+      color: #f1c40f;
+    }
+    nav {
+      display: flex;
+      gap: 2rem;
+    }
+    nav a {
+      font-size: 1rem;
+      padding: 0.3rem 0;
+      border-bottom: 2px solid transparent;
+    }
+    nav a:hover, nav a.active {
+      border-bottom: 2px solid #f1c40f;
+    }
+
+    main {
+      max-width: 720px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      flex-grow: 1;
+    }
+
+    .tool {
+      background: #222;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 0 10px #f1c40f55;
+      transition: transform 0.3s ease;
+    }
+    .tool:hover {
+      transform: translateY(-5px);
+    }
+    .tool h2 {
+      margin-bottom: 1rem;
+      font-size: 1.3rem;
+      color: #f9d71c;
+      text-align: center;
+    }
+    .tool input[type="text"] {
+      width: 100%;
+      padding: 0.8rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      background: #333;
+      color: #eee;
+      transition: background-color 0.3s ease;
+    }
+    .tool input[type="text"]:focus {
+      outline: none;
+      background: #444;
+    }
+    .tool button {
+      background: #f1c40f;
+      border: none;
+      padding: 0.9rem 1.5rem;
+      font-weight: 700;
+      font-size: 1rem;
+      color: #121212;
+      border-radius: 8px;
+      cursor: pointer;
+      width: 100%;
+      transition: background-color 0.3s ease;
+    }
+    .tool button:hover {
+      background: #d4ac0d;
+    }
+
+    /* Modal Styles */
+    .modal {
+      display: none; 
+      position: fixed; 
+      z-index: 150; 
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      overflow: auto; 
+      background-color: rgba(0,0,0,0.75);
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-content {
+      background: #222;
+      border-radius: 10px;
+      padding: 2rem;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 0 0 20px #f1c40fbb;
+      color: #fff;
+      text-align: center;
+      position: relative;
+    }
+    .modal-content h3 {
+      margin-bottom: 1rem;
+      color: #f1c40f;
+    }
+    .modal-content select {
+      width: 100%;
+      padding: 0.8rem;
+      border-radius: 8px;
+      border: none;
+      font-size: 1rem;
+      margin-bottom: 1.5rem;
+      background: #333;
+      color: #eee;
+    }
+    .modal-content button {
+      padding: 0.8rem 1.5rem;
+      background: #f1c40f;
+      color: #121212;
+      border: none;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+    }
+    .modal-content button:hover {
+      background: #d4ac0d;
+    }
+    .close-btn {
+      position: absolute;
+      top: 10px; right: 15px;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #f1c40f;
+      cursor: pointer;
+    }
+
+    section.about {
+      max-width: 720px;
+      margin: 3rem auto 2rem;
+      background: #1c1c1c;
+      padding: 1.8rem 2rem;
+      border-radius: 12px;
+      box-shadow: 0 0 15px #f1c40f55;
+      color: #ddd;
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+    section.about h2 {
+      color: #f1c40f;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    footer {
+      text-align: center;
+      padding: 1.2rem;
+      background: #111;
+      color: #999;
+      font-size: 0.9rem;
+      user-select: none;
+    }
+
+    /* Thumbnail preview styles */
+    #thumbnail-previews {
+      margin-top: 15px;
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    #thumbnail-previews img {
+      max-width: 120px;
+      border: 3px solid transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: border-color 0.3s ease;
+    }
+    #thumbnail-previews img.selected {
+      border-color: gold;
+    }
+    #thumb-quality-select {
+      margin-top: 15px;
+      width: 100%;
+      padding: 0.8rem;
+      border-radius: 8px;
+      border: none;
+      font-size: 1rem;
+      background: #333;
+      color: #eee;
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      nav {
+        flex-direction: column;
+        gap: 0.8rem;
+        text-align: center;
+      }
+      main, section.about {
+        margin: 1rem;
+        padding: 1rem;
+      }
+      .tool {
+        margin-bottom: 1.5rem;
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>All-In-One Downloader</h1>
+    <nav>
+      <a href="#" class="active">Home</a>
+      <a href="#">Blog</a>
+      <a href="#">About</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="tool" id="tool-yt">
+      <h2>YouTube Video Downloader</h2>
+      <input type="text" id="yt-link" placeholder="Paste YouTube Video Link here..." />
+      <button onclick="openModal('yt')">Download Video</button>
+    </div>
+
+    <div class="tool" id="tool-fb">
+      <h2>Facebook Video Downloader</h2>
+      <input type="text" id="fb-link" placeholder="Paste Facebook Video Link here..." />
+      <button onclick="openModal('fb')">Download Video</button>
+    </div>
+
+    <div class="tool" id="tool-tt">
+      <h2>TikTok Video Downloader</h2>
+      <input type="text" id="tt-link" placeholder="Paste TikTok Video Link here..." />
+      <button onclick="openModal('tt')">Download Video</button>
+    </div>
+
+    <div class="tool" id="tool-thumb">
+      <h2>YouTube Thumbnail Downloader</h2>
+      <input type="text" id="thumb-link" placeholder="Paste YouTube Video Link here..." />
+      <button onclick="showThumbnails()">Show Thumbnails</button>
+
+      <div id="thumbnail-previews"></div>
+
+      <select id="thumb-quality-select" style="display:none;"></select>
+      <button id="download-thumb-btn" style="display:none;">Download Selected Thumbnail</button>
+    </div>
+
+    <div class="tool" id="tool-insta">
+      <h2>Instagram Reels Downloader</h2>
+      <input type="text" id="insta-link" placeholder="Paste Instagram Reel Link here..." />
+      <button onclick="openModal('insta')">Download Reel</button>
+    </div>
+  </main>
+
+  <!-- Modal for Quality Selection -->
+  <div class="modal" id="quality-modal">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeModal()">&times;</span>
+      <h3>Select Video Quality</h3>
+      <select id="quality-select"></select>
+      <button id="start-download-btn">Start Download</button>
+    </div>
+  </div>
+
+  <section class="about">
+    <h2>About This Website</h2>
+    <p>
+      Welcome to <strong>All-In-One Downloader</strong> — your free, easy-to-use platform to download videos and thumbnails from popular social media platforms like YouTube, Facebook, TikTok, Instagram, and more.
+    </p>
+    <p>
+      Our mission is to provide fast and reliable download services completely free of cost, supporting multiple video qualities and formats for your convenience.
+    </p>
+    <p>
+      Please note that this website is for personal use only and respects the terms of service of the respective platforms. We do not host any content; we simply provide tools to help you download content legally available to you.
+    </p>
+    <p>
+      Developed with ❤️ by Dowran Sharma.
+    </p>
+  </section>
+
+  <footer>
+    &copy; 2025 All-In-One Downloader. Built with ❤️ by Dowran Sharma
+  </footer>
+
+  <script>
+    // Quality options for video download modal
+    const qualityOptions = {
+      yt: ['1080p', '720p', '480p', '360p'],
+      fb: ['HD', 'SD'],
+      tt: ['Original', 'No Watermark'],
+      insta: ['HD', 'SD'],
+    };
+
+    let currentTool = null;
+    let currentLink = '';
+
+    function openModal(tool) {
+      currentTool = tool;
+      let options = qualityOptions[tool];
+      const select = document.getElementById('quality-select');
+      select.innerHTML = '';
+      options.forEach(q => {
+        let opt = document.createElement('option');
+        opt.value = q;
+        opt.textContent = q;
+        select.appendChild(opt);
+      });
+      currentLink = document.getElementById(tool + '-link').value.trim();
+      if (!currentLink) {
+        alert('Please enter a valid link.');
+        return;
+      }
+      document.getElementById('quality-modal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('quality-modal').style.display = 'none';
+      currentTool = null;
+      currentLink = '';
+    }
+
+    document.getElementById('start-download-btn').addEventListener('click', () => {
+      const quality = document.getElementById('quality-select').value;
+      closeModal();
+      startFakeDownload(currentTool.toUpperCase() + ' Video (' + quality + ')', currentLink);
+    });
+
+    function startFakeDownload(toolName, link) {
+      alert(`Download started for ${toolName}!\nLink: ${link}\n(This is a demo action.)`);
+    }
+
+    window.onclick = function(event) {
+      const modal = document.getElementById('quality-modal');
+      if (event.target === modal) {
+        closeModal();
+      }
+    }
+
+    // YouTube Thumbnail Downloader logic
+    const thumbnailQualities = {
+      'default': 'default.jpg',
+      'mqdefault': 'mqdefault.jpg',
+      'hqdefault': 'hqdefault.jpg',
+      'sddefault': 'sddefault.jpg',
+      'maxresdefault': 'maxresdefault.jpg'
+    };
+
+    function extractYouTubeID(url) {
+      // More robust regex for YouTube IDs
+      const regex = /(?:youtube\.com\/.*v=|youtu\.be\/)([^&\n?#]+)/;
+      const match = url.match(regex);
+      return match ? match[1] : null;
+    }
+
+    function showThumbnails() {
+      const linkInput = document.getElementById('thumb-link').value.trim();
+      const videoId = extractYouTubeID(linkInput);
+      const previewsDiv = document.getElementById('thumbnail-previews');
+      const qualitySelect = document.getElementById('thumb-quality-select');
+      const downloadBtn = document.getElementById('download-thumb-btn');
+
+      // Clear old
+      previewsDiv.innerHTML = '';
+      qualitySelect.style.display = 'none';
+      downloadBtn.style.display = 'none';
+      qualitySelect.innerHTML = '';
+
+      if (!videoId) {
+        alert('Please enter a valid YouTube video URL.');
+        return;
+      }
+
+      // Add thumbnails images & options to select dropdown
+      let firstQuality = null;
+      Object.entries(thumbnailQualities).forEach(([key, filename], i) => {
+        const url = `https://img.youtube.com/vi/${videoId}/${filename}`;
+        // Create thumbnail img element
+        const img = document.createElement('img');
+        img.src = url;
+        img.alt = `${key} thumbnail`;
+        img.dataset.quality = key;
+        img.title = key;
+        if (i === 0) {
+          img.classList.add('selected');
+          firstQuality = key;
+        }
+        // Clicking image selects it and syncs dropdown
+        img.addEventListener('click', () => {
+          document.querySelectorAll('#thumbnail-previews img').forEach(el => el.classList.remove('selected'));
+          img.classList.add('selected');
+          qualitySelect.value = key;
+        });
+        previewsDiv.appendChild(img);
+
+        // Add option to dropdown
+        const option = document.createElement('option');
+        option.value = key;
+        option.textContent = key.charAt(0).toUpperCase() + key.slice(1) + ' Quality';
+        qualitySelect.appendChild(option);
+      });
+
+      qualitySelect.style.display = 'block';
+      qualitySelect.value = firstQuality;
+      downloadBtn.style.display = 'block';
+
+      // When dropdown changes, sync image highlight
+      qualitySelect.onchange = () => {
+        const val = qualitySelect.value;
+        document.querySelectorAll('#thumbnail-previews img').forEach(el => {
+          if (el.dataset.quality === val) {
+            el.classList.add('selected');
+          } else {
+            el.classList.remove('selected');
+          }
+        });
+      };
+
+      // Download button triggers download of selected thumbnail
+      downloadBtn.onclick = () => {
+        const selectedQuality = qualitySelect.value;
+        const downloadUrl = `https://img.youtube.com/vi/${videoId}/${thumbnailQualities[selectedQuality]}`;
+        downloadImage(downloadUrl, `${videoId}_${selectedQuality}.jpg`);
+      };
+    }
+
+    // Download helper using fetch + blob + anchor click
+    function downloadImage(url, filename) {
+      fetch(url)
+        .then(res => res.blob())
+        .then(blob => {
+          const blobUrl = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = blobUrl;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(blobUrl);
+        })
+        .catch(() => alert('Failed to download image. Please try again.'));
+    }
+  </script>
+</body>
+</html>
